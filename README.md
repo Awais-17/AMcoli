@@ -157,21 +157,30 @@ If Smart App Control is in "Enforced" mode, it blocks all unsigned executables:
 
 ## Usage
 
-Start the interactive visual selector and simulated chat/cache demo:
+### 1. Agentic Workflow CLI (Claude Code style)
+You can launch an autonomous, agentic coding assistant that can run local commands, view files, and list directories with your explicit approval:
+```bash
+# Start the agent using default Ollama server and Qwen-Coder model
+amcoli agent
+
+# Or configure a custom API endpoint and model
+amcoli agent --api-url http://127.0.0.1:11434/v1 --model qwen2.5-coder:7b
+```
+
+### 2. Native Engine CLI
+Start the C++ interactive visual selector and simulated chat/cache demo:
 ```bash
 # Launch selector CLI
-./build/Release/amcoli run
+amcoli run
 ```
 
 Or inspect/run the current simulated path on a local GGUF file:
 ```bash
 # Start the current demo on a downloaded GGUF file
-./build/Release/amcoli run --model .models/Qwen1.5-MoE-A2.7B-Chat-Q4_K_M.gguf
+amcoli run --model .models/Qwen1.5-MoE-A2.7B-Chat-Q4_K_M.gguf
 ```
 
-Note: `run` does not generate real model tokens yet. It validates/parses the
-model, exercises expert cache reads, and streams demo text until llama.cpp
-inference integration is added.
+*Note: `run` does not generate real model tokens yet. It validates/parses the model, exercises expert cache reads, and streams demo text until llama.cpp inference integration is added.*
 
 ---
 
