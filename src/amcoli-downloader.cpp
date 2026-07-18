@@ -174,6 +174,16 @@ static const struct amcoli_model_info g_model_registry[] = {
         280.0
     },
     {
+        "glm-5.2",
+        "GLM-5.2-Colibri (UD-IQ2_XXS)",
+        "https://huggingface.co/unsloth/GLM-5.2-GGUF/resolve/main/UD-IQ2_XXS/GLM-5.2-UD-IQ2_XXS-00001-of-00006.gguf",
+        "GLM-5.2-UD-IQ2_XXS-00001-of-00006.gguf",
+        238.0,
+        744.0,
+        40.0,
+        280.0
+    },
+    {
         "qwen-coder-7b",
         "Qwen2.5-Coder-7B-Instruct (Q4_K_M)",
         "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q4_k_m.gguf",

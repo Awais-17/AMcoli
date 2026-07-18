@@ -45,8 +45,9 @@ AMcoli contains a built-in downloader registry for the highest-performing open s
 | 13 | **Mixtral-8x7B-Instruct-v0.1** | 46.7B | 12.9B | 26.4 GB | Chat MoE |
 | 14 | **Mixtral-8x22B-v0.1** | 141.0B | 39.0B | 45.1 GB | Large MoE |
 | 15 | **GLM-5.1** | 754.0B | 40.0B | 200.0 GB | Large MoE (Agentic) |
-| 16 | **Qwen2.5-Coder-7B-Instruct** | 7.6B | 7.6B | 4.7 GB | Coding (Dense) |
-| 17 | **Qwen2.5-Coder-32B-Instruct** | 32.5B | 32.5B | 20.3 GB | Coding (Dense) |
+| 16 | **GLM-5.2-Colibri** | 744.0B | 40.0B | 238.0 GB | Large MoE (Agentic) |
+| 17 | **Qwen2.5-Coder-7B-Instruct** | 7.6B | 7.6B | 4.7 GB | Coding (Dense) |
+| 18 | **Qwen2.5-Coder-32B-Instruct** | 32.5B | 32.5B | 20.3 GB | Coding (Dense) |
 
 ---
 
