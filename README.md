@@ -211,15 +211,15 @@ amcoli agent --api-url http://127.0.0.1:11434/v1 --model qwen2.5-coder:7b
 ```
 
 ### 2. Native Engine CLI
-Start the C++ interactive visual selector and simulated chat/cache demo:
+Start the C++ interactive visual selector and live chat/cache execution:
 ```bash
 # Launch selector CLI
 amcoli run
 ```
 
-Or inspect/run the current simulated path on a local GGUF file:
+Or run the live inference path on a local GGUF file:
 ```bash
-# Start the current demo on a downloaded GGUF file
+# Run local token generation on a downloaded GGUF file
 amcoli run --model .models/Qwen1.5-MoE-A2.7B-Chat-Q4_K_M.gguf
 ```
 

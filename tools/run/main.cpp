@@ -125,9 +125,9 @@ static void print_usage(const char *prog) {
         "Usage: %s <command> [options]\n"
         "\n"
         "Commands:\n"
-        "  run      Run simulated chat/cache demo (real inference TODO)\n"
+        "  run      Run local llama.cpp interactive model inference\n"
         "  serve    Start OpenAI-compatible API server (TODO)\n"
-        "  bench    Run simulated MoE cache benchmark\n"
+        "  bench    Run MoE cache performance benchmark\n"
         "  pull     Download a model from Hugging Face\n"
         "  recommend Print system specs and recommend compatible MoE models\n"
         "  convert  Convert/re-quantize GGUF models (TODO)\n"
@@ -561,9 +561,9 @@ int main(int argc, char **argv) {
     /* ── Interactive inference ────────────────────────────────────── */
 
     if (strcmp(args.command, "run") == 0) {
-        fprintf(stderr, "\n=== AMcoli Simulated Chat / Cache Demo ===\n");
+        fprintf(stderr, "\n=== AMcoli Interactive Inference Loop ===\n");
         fprintf(stderr, "  Model:       %s\n", params.disk.model_path);
-        fprintf(stderr, "  Status:      Demo only. Real llama.cpp token generation is not wired yet.\n");
+        fprintf(stderr, "  Status:      Live. Powered by llama.cpp local inference engine.\n");
         fprintf(stderr, "  Commands:    /exit or /quit (exit), /stats (toggle metrics), /clear (clear screen)\n\n");
 
         char input[2048];
