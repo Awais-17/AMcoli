@@ -14,12 +14,12 @@ Mixture-of-Experts (MoE) models are highly efficient during inference because on
 ## 2. Core Architecture
 The codebase is divided into two primary parts:
 1.  **AMcoli Core Library (`src/`)**:
-    *   [llama-disk-streamer.cpp](file:///c:/Users/mdawa/OneDrive/Desktop/All/AMcoli/src/llama-disk-streamer.cpp): Manages SSD memory-mapping and asynchronous expert layer fetching.
-    *   [llama-moe-cache.cpp](file:///c:/Users/mdawa/OneDrive/Desktop/All/AMcoli/src/llama-moe-cache.cpp): Implements the two-tier (VRAM + RAM) cache containing slot insertion, LRU/LFU eviction, and cache hits.
-    *   [amcoli-downloader.cpp](file:///c:/Users/mdawa/OneDrive/Desktop/All/AMcoli/src/amcoli-downloader.cpp): Handles Hugging Face GGUF registry lookups, downloads via Curl, and terminal percentage bars.
-    *   [amcoli-sys-info.cpp](file:///c:/Users/mdawa/OneDrive/Desktop/All/AMcoli/src/amcoli-sys-info.cpp): System specs detection (Win32 DXGI for GPU names, CPU core parsing, RAM status).
+    *   [llama-disk-streamer.cpp](src/llama-disk-streamer.cpp): Manages SSD memory-mapping and asynchronous expert layer fetching.
+    *   [llama-moe-cache.cpp](src/llama-moe-cache.cpp): Implements the two-tier (VRAM + RAM) cache containing slot insertion, LRU/LFU eviction, and cache hits.
+    *   [amcoli-downloader.cpp](src/amcoli-downloader.cpp): Handles Hugging Face GGUF registry lookups, downloads via Curl, and terminal percentage bars.
+    *   [amcoli-sys-info.cpp](src/amcoli-sys-info.cpp): System specs detection (Win32 DXGI for GPU names, CPU core parsing, RAM status).
 2.  **CLI Interface (`tools/run/`)**:
-    *   [main.cpp](file:///c:/Users/mdawa/OneDrive/Desktop/All/AMcoli/tools/run/main.cpp): Program entry point. Houses the console UTF-8 setup, loop menu selector, recommendation guide, and model loading/harness wrapper.
+    *   [main.cpp](tools/run/main.cpp): Program entry point. Houses the console UTF-8 setup, loop menu selector, recommendation guide, and model loading/harness wrapper.
 
 ---
 

@@ -116,14 +116,15 @@ The compiled binaries will be output to:
 To launch manually compiled AMcoli from any terminal by typing just `amcoli`, add its directory to your User PATH variable:
 
 #### Temporary (Current Session Only)
+Run this command in PowerShell from the repository root:
 ```powershell
-$env:Path += ";C:\Users\mdawa\OneDrive\Desktop\All\AMcoli\build\Release"
+$env:Path += ";$(Get-Item -Path '.\build\Release').FullName"
 ```
 
 #### Persistent (Across All Sessions)
-Run this command once in PowerShell:
+Run this command in PowerShell from the repository root to automatically resolve and persistently register the directory:
 ```powershell
-[System.Environment]::SetEnvironmentVariable("PATH", $Env:PATH + ";C:\Users\mdawa\OneDrive\Desktop\All\AMcoli\build\Release", "User")
+[System.Environment]::SetEnvironmentVariable("PATH", $Env:PATH + ";$(Get-Item -Path '.\build\Release').FullName", "User")
 ```
 *Note: Restart your terminal window for the change to take effect.*
 
@@ -138,8 +139,7 @@ You can tell Windows Defender to ignore the workspace folder so it doesn't block
 1. Open **Windows Start Menu** and type `Windows Security`.
 2. Go to **Virus & threat protection** → **Virus & threat protection settings** → **Manage settings**.
 3. Scroll down to **Exclusions** and click **Add or remove exclusions**.
-4. Click **Add an exclusion** → **Folder**, and select:
-   `C:\Users\mdawa\OneDrive\Desktop\All\AMcoli`
+4. Click **Add an exclusion** → **Folder**, and select your local AMcoli directory (e.g. `C:\path\to\AMcoli`).
 
 #### Method B: Unblock the Executable in PowerShell
 Sometimes Windows flags files downloaded or generated in user folders. Run:
