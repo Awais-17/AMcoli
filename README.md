@@ -19,10 +19,7 @@ models on constrained hardware.**
 
 AMcoli treats disk, RAM, and VRAM as a unified memory hierarchy — streaming experts from NVMe on demand, caching hot experts in RAM/VRAM, and prefetching likely next-layer experts to overlap I/O with compute.
 
-AMcoli is designed to integrate with [llama.cpp](https://github.com/ggerganov/llama.cpp)
-for model-generic GGUF loading and compute. The current codebase implements the
-GGUF inspection, expert indexing, cache, downloader, and benchmark simulation
-pieces; real token generation through llama.cpp is still pending.
+AMcoli is integrated with [llama.cpp](https://github.com/ggerganov/llama.cpp) for model-generic GGUF loading, tokenization, and local generation. The codebase implements the GGUF inspection, expert indexing, active memory cache management, NVMe streamer, and interactive token-decoding loops.
 
 ---
 
@@ -226,7 +223,7 @@ Or inspect/run the current simulated path on a local GGUF file:
 amcoli run --model .models/Qwen1.5-MoE-A2.7B-Chat-Q4_K_M.gguf
 ```
 
-*Note: `run` does not generate real model tokens yet. It validates/parses the model, exercises expert cache reads, and streams demo text until llama.cpp inference integration is added.*
+*Note: `run` performs real model token generation using the linked `llama.cpp` inference engine, while dynamically updating the active RAM/VRAM expert cache statistics.*
 
 ---
 
