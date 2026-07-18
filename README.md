@@ -119,24 +119,31 @@ Before installing or compiling, ensure you have the following ready:
 *   **Curl**: Native `curl.exe` (installed by default on Windows 10/11) to handle Hugging Face model downloads.
 
 ### 2. Quick Global Installation (Recommended)
-To run AMcoli globally from any folder in your terminal, select one of the following options:
+To run AMcoli globally from any folder in your terminal, select the appropriate option for your operating system:
 
-#### Option A: Using PowerShell (Windows)
+#### Option A: Windows (PowerShell)
 Run this command in PowerShell to automatically install, add `amcoli` to your `PATH`, and unblock the executable for Smart App Control compatibility:
 ```powershell
 irm https://raw.githubusercontent.com/Awais-17/AMcoli/main/scripts/install.ps1 | iex
 ```
 
-#### Option B: Using NPM (Cross-Platform)
-If you have Node.js installed, you can install the package globally from the repository:
-```powershell
+#### Option B: Linux & macOS (Bash)
+Run this command in your terminal to automatically compile/install, register the `amcoli` binary inside `~/.amcoli/bin`, and add it to your shell profile (`.bashrc` or `.zshrc`):
+```bash
+curl -fsSL https://raw.githubusercontent.com/Awais-17/AMcoli/main/scripts/install.sh | bash
+```
+
+#### Option C: Node.js / NPM (Cross-Platform)
+If you have Node.js installed, you can compile and install the package globally directly from the source directory:
+```bash
 # Navigate to the npm-wrapper directory
 cd npm-wrapper
 
 # Install globally
 npm install -g .
 ```
-*(Or install directly from GitHub when published: `npm install -g @github/amcoli`)*
+*(Or install directly from GitHub: `npm install -g github:Awais-17/AMcoli#main`)*
+
 
 ### 3. Manual Compilation
 If you prefer to compile manually in Release mode using CMake:

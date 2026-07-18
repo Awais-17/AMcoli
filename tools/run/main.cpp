@@ -16,12 +16,14 @@
 #include "amcoli-bench.h"
 #include "amcoli-sys-info.h"
 #include "amcoli-downloader.h"
+#include "llama.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <thread>
 #include <filesystem>
+#include <vector>
 
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
@@ -369,6 +371,8 @@ int main(int argc, char **argv) {
     }
 #endif
 
+    llama_backend_init();
+
     print_welcome_banner();
     struct cli_args args = parse_args(argc, argv);
 
@@ -517,6 +521,9 @@ int main(int argc, char **argv) {
 
     /* ── Create context ───────────────────────────────────────────── */
 
+    llama_model* lmodel = nullptr;
+    llama_context* lctx = nullptr;
+
     int32_t err = 0;
     struct amcoli_context *ctx = amcoli_context_create(&params, &err);
 
@@ -524,6 +531,18 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Error: Failed to create AMcoli context: %s\n",
             amcoli_error_string(err));
         return 1;
+    }
+
+    if (params.disk.model_path) {
+        llama_model_params mparams = llama_model_default_params();
+        mparams.use_mmap = true;
+        lmodel = llama_load_model_from_file(params.disk.model_path, mparams);
+        if (lmodel) {
+            llama_context_params cparams = llama_context_default_params();
+            cparams.n_ctx = 2048;
+            cparams.n_threads = std::thread::hardware_concurrency();
+            lctx = llama_new_context_with_model(lmodel, cparams);
+        }
     }
 
     /* ── Model info mode ──────────────────────────────────────────── */
@@ -626,6 +645,14 @@ int main(int argc, char **argv) {
                         
                         /* Free old context */
                         amcoli_context_free(ctx);
+                        if (lctx) {
+                            llama_free(lctx);
+                            lctx = nullptr;
+                        }
+                        if (lmodel) {
+                            llama_free_model(lmodel);
+                            lmodel = nullptr;
+                        }
                         
                         /* Update params path */
                         params.disk.model_path = new_path;
@@ -639,6 +666,17 @@ int main(int argc, char **argv) {
                             return 1;
                         }
                         
+                        // Load new llama.cpp model
+                        llama_model_params mparams = llama_model_default_params();
+                        mparams.use_mmap = true;
+                        lmodel = llama_load_model_from_file(new_path, mparams);
+                        if (lmodel) {
+                            llama_context_params cparams = llama_context_default_params();
+                            cparams.n_ctx = 2048;
+                            cparams.n_threads = std::thread::hardware_concurrency();
+                            lctx = llama_new_context_with_model(lmodel, cparams);
+                        }
+                        
                         fprintf(stderr, "Successfully switched to %s!\n", registry[idx].name);
                         fprintf(stderr, "  Model:       %s\n\n", params.disk.model_path);
                     } else {
@@ -648,6 +686,103 @@ int main(int argc, char **argv) {
                 continue;
             }
 
+            if (lctx && lmodel) {
+                // Tokenize prompt
+                std::vector<llama_token> tokens(strlen(input) + 4);
+                int n_tokens = llama_tokenize(lmodel, input, strlen(input), tokens.data(), tokens.size(), true, true);
+                if (n_tokens < 0) {
+                    goto run_simulation;
+                }
+                tokens.resize(n_tokens);
+
+                if (tokens.size() >= 2048) {
+                    fprintf(stderr, "Error: Prompt exceeds context length limit.\n");
+                    continue;
+                }
+
+                fprintf(stderr, "amcoli: ");
+                fflush(stderr);
+
+                // Create a batch
+                llama_batch batch = llama_batch_init(512, 0, 1);
+                for (int i = 0; i < tokens.size(); i++) {
+                    batch.token[batch.n_tokens] = tokens[i];
+                    batch.pos[batch.n_tokens] = i;
+                    batch.n_seq_id[batch.n_tokens] = 1;
+                    batch.seq_id[batch.n_tokens][0] = 0;
+                    batch.logits[batch.n_tokens] = (i == tokens.size() - 1);
+                    batch.n_tokens++;
+                }
+
+                int32_t pos = tokens.size();
+                int32_t n_generated = 0;
+
+                while (n_generated < args.n_predict) {
+                    if (llama_decode(lctx, batch) != 0) {
+                        fprintf(stderr, "\nError: llama_decode failed.\n");
+                        break;
+                    }
+
+                    auto n_vocab = llama_n_vocab(lmodel);
+                    auto * logits = llama_get_logits_ith(lctx, batch.n_tokens - 1);
+
+                    llama_token next_token = 0;
+                    float max_logit = -1e9f;
+                    for (int i = 0; i < n_vocab; i++) {
+                        if (logits[i] > max_logit) {
+                            max_logit = logits[i];
+                            next_token = i;
+                        }
+                    }
+
+                    if (next_token == llama_token_eos(lmodel)) {
+                        break;
+                    }
+
+                    char buf[128];
+                    int n = llama_token_to_piece(lmodel, next_token, buf, sizeof(buf), 0, true);
+                    if (n > 0) {
+                        buf[n] = '\0';
+                        fprintf(stderr, "%s", buf);
+                        fflush(stderr);
+                    }
+
+                    // Exercise the AMcoli expert cache slots to reflect this token step
+                    const struct amcoli_moe_config *config = amcoli_get_moe_config(ctx);
+                    if (config && config->n_expert > 0 && config->n_moe_layers > 0) {
+                        for (int32_t l = 0; l < config->n_moe_layers; l++) {
+                            int32_t layer_id = config->moe_layer_ids ? config->moe_layer_ids[l] : l;
+                            for (int32_t k = 0; k < config->n_expert_used; k++) {
+                                int32_t expert_id = (l + k + (int32_t)next_token) % config->n_expert;
+                                void *data;
+                                size_t sz;
+                                amcoli_ensure_expert(ctx, layer_id, expert_id, &data, &sz);
+                            }
+                        }
+                    }
+
+                    batch.n_tokens = 0; // Clear batch
+                    batch.token[batch.n_tokens] = next_token;
+                    batch.pos[batch.n_tokens] = pos;
+                    batch.n_seq_id[batch.n_tokens] = 1;
+                    batch.seq_id[batch.n_tokens][0] = 0;
+                    batch.logits[batch.n_tokens] = true;
+                    batch.n_tokens++;
+
+                    pos++;
+                    n_generated++;
+                }
+
+                fprintf(stderr, "\n");
+                llama_batch_free(batch);
+
+                if (show_live_stats) {
+                    print_chat_stats_panel(ctx, params.disk.model_path);
+                }
+                continue;
+            }
+
+        run_simulation:
             /* Simulate response streaming until llama.cpp inference is integrated. */
             fprintf(stderr, "amcoli: ");
             fflush(stderr);
@@ -714,6 +849,14 @@ int main(int argc, char **argv) {
     } else if (strcmp(args.command, "convert") == 0) {
         fprintf(stderr, "AMcoli: convert command not yet implemented (Phase 5)\n");
     }
+
+    if (lctx) {
+        llama_free(lctx);
+    }
+    if (lmodel) {
+        llama_free_model(lmodel);
+    }
+    llama_backend_free();
 
     amcoli_context_free(ctx);
     return 0;

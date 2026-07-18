@@ -4,3 +4,6 @@ build/
 results.json
 npm-wrapper/bin/*
 !npm-wrapper/bin/index.js
+Testing/
+node_modules/
+npm-wrapper/node_modules/

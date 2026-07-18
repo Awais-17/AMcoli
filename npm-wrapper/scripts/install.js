@@ -99,7 +99,21 @@ function tryLocalBuild() {
     
     if (fs.existsSync(builtBin)) {
       fs.copyFileSync(builtBin, destPath);
-      if (platform !== 'win32') {
+      if (platform === 'win32') {
+        // Also copy dependency DLLs if they exist
+        const releaseDir = path.dirname(builtBin);
+        const binReleaseDir = path.join(rootDir, 'build', 'bin', 'Release');
+        const dlls = ['llama.dll', 'ggml.dll'];
+        for (const dll of dlls) {
+          let srcDll = path.join(releaseDir, dll);
+          if (!fs.existsSync(srcDll)) {
+            srcDll = path.join(binReleaseDir, dll);
+          }
+          if (fs.existsSync(srcDll)) {
+            fs.copyFileSync(srcDll, path.join(binDir, dll));
+          }
+        }
+      } else {
         fs.chmodSync(destPath, 0o755);
       }
       console.log('\x1b[32mSuccessfully compiled and installed local binary!\x1b[0m');

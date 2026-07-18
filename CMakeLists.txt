@@ -47,6 +47,20 @@ if(AMCOLI_IO_URING)
     endif()
 endif()
 
+# ── llama.cpp Integration ──────────────────────────────────────────────
+include(FetchContent)
+FetchContent_Declare(
+    llamacpp
+    GIT_REPOSITORY https://github.com/ggerganov/llama.cpp.git
+    GIT_TAG        b3400
+    GIT_SHALLOW    TRUE
+)
+set(LLAMA_BUILD_TESTS OFF CACHE INTERNAL "")
+set(LLAMA_BUILD_EXAMPLES OFF CACHE INTERNAL "")
+set(LLAMA_BUILD_SERVER OFF CACHE INTERNAL "")
+
+FetchContent_MakeAvailable(llamacpp)
+
 # ── Core library ─────────────────────────────────────────────────────────
 
 set(AMCOLI_SOURCES
@@ -77,6 +91,8 @@ target_include_directories(amcoli_core
     PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+target_link_libraries(amcoli_core PUBLIC llama ggml)
 
 # Platform libraries
 if(WIN32)

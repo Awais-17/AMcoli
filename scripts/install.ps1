@@ -102,6 +102,20 @@ if (-not $downloaded) {
         $builtExe = "$srcDir\build\Release\amcoli.exe"
         if (Test-Path -Path $builtExe) {
             Copy-Item -Path $builtExe -Destination $binDir -Force
+            # Copy DLLs
+            $releaseDir = (Split-Path $builtExe)
+            $dlls = @("llama.dll", "ggml.dll")
+            foreach ($dll in $dlls) {
+                $dllPath = Join-Path $releaseDir $dll
+                $binReleaseDir = Join-Path $srcDir "build\bin\Release"
+                if (-not (Test-Path -Path $dllPath)) {
+                    $dllPath = Join-Path $binReleaseDir $dll
+                }
+                if (Test-Path -Path $dllPath) {
+                    Copy-Item -Path $dllPath -Destination $binDir -Force
+                    Unblock-File -Path (Join-Path $binDir $dll) -ErrorAction SilentlyContinue
+                }
+            }
             $downloaded = $true
             Write-Host "Successfully compiled AMcoli." -ForegroundColor Green
         } else {
