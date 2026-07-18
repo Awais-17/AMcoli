@@ -52,6 +52,18 @@ AMcoli contains a built-in downloader registry for the highest-performing open s
 | 20 | **Kimi-Coder-135M** | 0.13B | 0.13B | 0.1 GB | Coding (Dense) |
 | 21 | **Qwen2.5-Coder-7B-Instruct** | 7.6B | 7.6B | 4.7 GB | Coding (Dense) |
 | 22 | **Qwen2.5-Coder-32B-Instruct** | 32.5B | 32.5B | 20.3 GB | Coding (Dense) |
+| 23 | **Meta-Llama-3.1-8B-Instruct** | 8.0B | 8.0B | 4.9 GB | General (Dense) |
+| 24 | **Meta-Llama-3.1-70B-Instruct** | 70.6B | 70.6B | 43.0 GB | General (Dense) |
+| 25 | **Llama-3.2-1B-Instruct** | 1.2B | 1.2B | 1.2 GB | General (Dense) |
+| 26 | **Llama-3.2-3B-Instruct** | 3.2B | 3.2B | 2.0 GB | General (Dense) |
+| 27 | **Gemma-2-2b-it** | 2.6B | 2.6B | 1.7 GB | General (Dense) |
+| 28 | **Gemma-2-9b-it** | 9.2B | 9.2B | 5.7 GB | General (Dense) |
+| 29 | **Gemma-2-27b-it** | 27.2B | 27.2B | 17.4 GB | General (Dense) |
+| 30 | **Qwen2.5-7B-Instruct** | 7.6B | 7.6B | 4.7 GB | General (Dense) |
+| 31 | **Qwen2.5-72B-Instruct** | 72.5B | 72.5B | 46.5 GB | General (Dense) |
+| 32 | **Command-R-Plus** | 104.0B | 104.0B | 62.0 GB | Large MoE |
+| 33 | **Phi-3-mini-128k-instruct** | 3.8B | 3.8B | 2.4 GB | General (Dense) |
+| 34 | **Phi-4-Instruct** | 14.7B | 14.7B | 8.5 GB | General (Dense) |
 
 ---
 

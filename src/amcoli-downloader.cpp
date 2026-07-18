@@ -242,6 +242,126 @@ static const struct amcoli_model_info g_model_registry[] = {
         32.5,
         32.5,
         0.0
+    },
+    {
+        "llama-3.1-8b",
+        "Meta-Llama-3.1-8B-Instruct (Q4_K_M)",
+        "https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
+        "Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
+        4.9,
+        8.0,
+        8.0,
+        0.0
+    },
+    {
+        "llama-3.1-70b",
+        "Meta-Llama-3.1-70B-Instruct (Q4_K_M)",
+        "https://huggingface.co/bartowski/Meta-Llama-3.1-70B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-70B-Instruct-Q4_K_M.gguf",
+        "Meta-Llama-3.1-70B-Instruct-Q4_K_M.gguf",
+        43.0,
+        70.6,
+        70.6,
+        0.0
+    },
+    {
+        "llama-3.2-1b",
+        "Llama-3.2-1B-Instruct (Q4_K_M)",
+        "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+        "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+        1.2,
+        1.2,
+        1.2,
+        0.0
+    },
+    {
+        "llama-3.2-3b",
+        "Llama-3.2-3B-Instruct (Q4_K_M)",
+        "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        2.0,
+        3.2,
+        3.2,
+        0.0
+    },
+    {
+        "gemma-2-2b",
+        "Gemma-2-2b-it (Q4_K_M)",
+        "https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q4_K_M.gguf",
+        "gemma-2-2b-it-Q4_K_M.gguf",
+        1.7,
+        2.6,
+        2.6,
+        0.0
+    },
+    {
+        "gemma-2-9b",
+        "Gemma-2-9b-it (Q4_K_M)",
+        "https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/resolve/main/gemma-2-9b-it-Q4_K_M.gguf",
+        "gemma-2-9b-it-Q4_K_M.gguf",
+        5.7,
+        9.2,
+        9.2,
+        0.0
+    },
+    {
+        "gemma-2-27b",
+        "Gemma-2-27b-it (Q4_K_M)",
+        "https://huggingface.co/bartowski/gemma-2-27b-it-GGUF/resolve/main/gemma-2-27b-it-Q4_K_M.gguf",
+        "gemma-2-27b-it-Q4_K_M.gguf",
+        17.4,
+        27.2,
+        27.2,
+        0.0
+    },
+    {
+        "qwen-2.5-7b",
+        "Qwen2.5-7B-Instruct (Q4_K_M)",
+        "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_k_m.gguf",
+        "qwen2.5-7b-instruct-q4_k_m.gguf",
+        4.7,
+        7.6,
+        7.6,
+        0.0
+    },
+    {
+        "qwen-2.5-72b",
+        "Qwen2.5-72B-Instruct (Q4_K_M)",
+        "https://huggingface.co/Qwen/Qwen2.5-72B-Instruct-GGUF/resolve/main/qwen2.5-72b-instruct-q4_k_m.gguf",
+        "qwen2.5-72b-instruct-q4_k_m.gguf",
+        46.5,
+        72.5,
+        72.5,
+        0.0
+    },
+    {
+        "command-r-plus",
+        "Command-R-Plus (Q4_K_M)",
+        "https://huggingface.co/bartowski/c4ai-command-r-plus-GGUF/resolve/main/c4ai-command-r-plus-Q4_K_M.gguf",
+        "c4ai-command-r-plus-Q4_K_M.gguf",
+        62.0,
+        104.0,
+        104.0,
+        0.0
+    },
+    {
+        "phi-3-mini",
+        "Phi-3-mini-128k-instruct (Q4_K_M)",
+        "https://huggingface.co/bartowski/Phi-3-mini-128k-instruct-GGUF/resolve/main/Phi-3-mini-128k-instruct-Q4_K_M.gguf",
+        "Phi-3-mini-128k-instruct-Q4_K_M.gguf",
+        2.4,
+        3.8,
+        3.8,
+        0.0
+    },
+    {
+        "phi-4",
+        "Phi-4-Instruct (Q4_K_M)",
+        "https://huggingface.co/bartowski/phi-4-GGUF/resolve/main/phi-4-Q4_K_M.gguf",
+        "phi-4-Q4_K_M.gguf",
+        8.5,
+        14.7,
+        14.7,
+        0.0
     }
 };
 
