@@ -64,7 +64,7 @@ cmake --build build --config Release
 .\build\Release\test-bench.exe
 ```
 
-If Windows blocks test binaries, follow `setup_guide.md` and unblock or add a
+If Windows blocks test binaries, follow `README.md` and unblock or add a
 Windows Security exclusion for the workspace.
 
 ## High-Priority Work
