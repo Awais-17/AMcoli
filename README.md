@@ -27,6 +27,8 @@ pieces; real token generation through llama.cpp is still pending.
 ---
 
 ## About AMcoli: The Simple Explanation 💡
+<img width="1282" height="751" alt="Screenshot 2026-07-18 130438" src="https://github.com/user-attachments/assets/cd7d38c7-8d66-485b-a166-d1aa0eef062e" />
+
 
 Imagine you want to run a massive, super-smart AI on your average laptop. Usually, your computer would crash because the AI model is simply too big to fit inside your computer's active memory (RAM/VRAM). 
 
