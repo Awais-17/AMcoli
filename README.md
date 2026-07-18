@@ -26,6 +26,29 @@ pieces; real token generation through llama.cpp is still pending.
 
 ---
 
+## About AMcoli: The Simple Explanation 💡
+
+Imagine you want to run a massive, super-smart AI on your average laptop. Usually, your computer would crash because the AI model is simply too big to fit inside your computer's active memory (RAM/VRAM). 
+
+Here is how **AMcoli** solves this problem using a simple analogy:
+
+### 1. The Analogy: A Team of Specialized Chefs
+Think of a giant AI model as a restaurant menu with 30 specialized chefs (called **"Experts"** in a **Mixture-of-Experts / MoE** model). One chef is great at coding C++, another at translation, another at math, etc.
+*   **The Problem**: Your laptop is like a **tiny kitchen counter** (VRAM/RAM). There is only enough physical space for 2 or 3 chefs to stand and work at a time. If all 30 chefs try to squeeze into the kitchen at once, the kitchen collapses (your computer runs out of memory and crashes).
+*   **The MoE Trick**: When you ask the AI a question, you actually only need **2 or 3 specific chefs** to answer it. The other 27 chefs are just standing there doing nothing.
+
+### 2. How AMcoli Makes It Work
+AMcoli acts as the smart head chef managing this tiny kitchen:
+
+*   **Disk Streaming (The Hotel)**: AMcoli keeps all 30 chefs waiting in a nearby hotel (your laptop's hard drive / SSD).
+*   **On-Demand Calling**: When you type a prompt, AMcoli instantly figures out which 2 chefs are needed, calls them from the hotel, and places them at the kitchen counter (VRAM/RAM) to do the work. Once they finish, they go back to the hotel.
+*   **Caching (Keeping Favorites)**: If a chef is constantly needed (like the coding chef), AMcoli lets them stay in the kitchen permanently instead of sending them back and forth.
+*   **Prefetching (Looking Ahead)**: While Chef A is cooking, AMcoli looks at what they are making and says, *"Aha, they will need Chef B in 5 seconds."* AMcoli calls Chef B from the hotel *before* they are actually needed, so Chef B walks in right on time.
+
+By swapping these specialized "experts" in and out of your laptop's memory from the hard drive, **AMcoli lets you run massive, world-class AI models on a standard laptop** that would normally require a expensive $10,000 server.
+
+---
+
 ## Key Features
 
 - **Architecture-generic**: Runs Mixtral, Qwen-MoE, DeepSeek-V3, GLM-5.1, and any GGUF MoE model without per-model code changes.
