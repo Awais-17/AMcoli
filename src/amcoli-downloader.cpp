@@ -184,6 +184,46 @@ static const struct amcoli_model_info g_model_registry[] = {
         280.0
     },
     {
+        "kimi-k2.6",
+        "Kimi-K2.6 (UD-Q2_K_XL)",
+        "https://huggingface.co/unsloth/Kimi-K2.6-GGUF/resolve/main/UD-Q2_K_XL/Kimi-K2.6-UD-Q2_K_XL-00001-of-00008.gguf",
+        "Kimi-K2.6-UD-Q2_K_XL-00001-of-00008.gguf",
+        350.0,
+        1000.0,
+        68.0,
+        280.0
+    },
+    {
+        "kimi-k3",
+        "Kimi-K3 (UD-Q2_K_XL)",
+        "https://huggingface.co/unsloth/Kimi-K3-GGUF/resolve/main/UD-Q2_K_XL/Kimi-K3-UD-Q2_K_XL-00001-of-00016.gguf",
+        "Kimi-K3-UD-Q2_K_XL-00001-of-00016.gguf",
+        980.0,
+        2800.0,
+        120.0,
+        320.0
+    },
+    {
+        "kimi-coder-72b",
+        "Kimi-Dev-72B-Coder (Q4_K_M)",
+        "https://huggingface.co/unsloth/Kimi-Dev-72B-GGUF/resolve/main/Kimi-Dev-72B-Q4_K_M.gguf",
+        "Kimi-Dev-72B-Q4_K_M.gguf",
+        42.5,
+        72.5,
+        72.5,
+        0.0
+    },
+    {
+        "kimi-coder-135m",
+        "Kimi-Coder-135M (Q4_K_M)",
+        "https://huggingface.co/mradermacher/kimi-coder-135m-GGUF/resolve/main/kimi-coder-135m.Q4_K_M.gguf",
+        "kimi-coder-135m.Q4_K_M.gguf",
+        0.1,
+        0.135,
+        0.135,
+        0.0
+    },
+    {
         "qwen-coder-7b",
         "Qwen2.5-Coder-7B-Instruct (Q4_K_M)",
         "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q4_k_m.gguf",
