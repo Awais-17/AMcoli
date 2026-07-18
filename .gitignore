@@ -2,4 +2,5 @@ build/
 .models/
 *.gguf
 results.json
-
+npm-wrapper/bin/*
+!npm-wrapper/bin/index.js

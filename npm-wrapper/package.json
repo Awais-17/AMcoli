@@ -1,0 +1,21 @@
+{
+  "name": "@github/amcoli",
+  "version": "0.1.0",
+  "description": "Universal MoE Disk-Streaming Inference Engine wrapper",
+  "main": "bin/index.js",
+  "bin": {
+    "amcoli": "./bin/index.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install.js"
+  },
+  "keywords": [
+    "moe",
+    "inference",
+    "gguf",
+    "llama",
+    "disk-streaming"
+  ],
+  "author": "Awais-17",
+  "license": "MIT"
+}

@@ -15,7 +15,30 @@ Before compiling, ensure you have the following installed:
 
 ---
 
-## 2. Compilation
+## 2. Quick Global Installation (Recommended)
+
+To run AMcoli globally from any folder in your terminal, select one of the following options:
+
+### Option A: Using PowerShell (Windows)
+Run this command in PowerShell to automatically install, add `amcoli` to your `PATH`, and unblock the executable for Smart App Control compatibility:
+```powershell
+irm https://raw.githubusercontent.com/Awais-17/AMcoli/main/scripts/install.ps1 | iex
+```
+
+### Option B: Using NPM (Cross-Platform)
+If you have Node.js installed, you can install the package globally from the repository:
+```powershell
+# Navigate to the npm-wrapper directory
+cd npm-wrapper
+
+# Install globally
+npm install -g .
+```
+*(Or install directly from GitHub when published: `npm install -g @github/amcoli`)*
+
+---
+
+## 3. Manual Compilation
 
 Compile the project in Release mode using CMake:
 
@@ -33,9 +56,9 @@ The compiled binaries will be output to:
 
 ---
 
-## 3. Global Terminal Shortcut
+## 4. Manual PATH Setup
 
-To launch AMcoli from any terminal by typing just `amcoli`, add its directory to your User PATH variable:
+To launch manually compiled AMcoli from any terminal by typing just `amcoli`, add its directory to your User PATH variable:
 
 ### Temporary (Current Session Only)
 ```powershell
@@ -51,7 +74,7 @@ Run this command once in PowerShell:
 
 ---
 
-## 4. Troubleshooting: Application Control Policy Blocks
+## 5. Troubleshooting: Application Control Policy Blocks
 
 On Windows 11, **Smart App Control** or **Windows Defender Application Control (WDAC)** may block newly compiled binaries, returning this error:
 > `Program 'amcoli.exe' failed to run: An Application Control policy has blocked this file`
@@ -77,3 +100,4 @@ Unblock-File -Path .\build\Release\test-moe-cache.exe
 If Smart App Control is in "Enforced" mode, it blocks all unsigned executables:
 1. Open **Windows Security** → **App & browser control** → **Smart App Control settings**.
 2. If it is blocking your custom builds, you can change the state to **Evaluation** or **Off** (note: turning it off requires a system restart and cannot be re-enabled without a Windows reinstall).
+
