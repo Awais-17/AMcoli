@@ -80,6 +80,26 @@ disk-streamed MoE expert loading on top.
 - Redeployed `amcoli.exe` (96,768 bytes) to all 3 deploy targets after killing
   an orphan process that was locking two of them.
 
+### AMcoli Agent rewrite (npm-wrapper)
+
+- Rewrote `npm-wrapper/lib/agent.js` end-to-end: real tools (list_dir,
+  read_file with line ranges + 5 MB size guard, search_files with regex + tree
+  walk skipping node_modules/.git/build/.models, get_system_info, write_file,
+  edit_file with `all`, run_command, run_amcoli), approval flow, JSONL history
+  in `~/.amcoli/agent-history.jsonl`, HTTPS + Bearer API-key support, optional
+  SSE streaming, new slash commands (`/model`, `/api`, `/clear`, `/reset`),
+  and fixed the readline EOF crash (lazy `ensureRL()`).
+- Robustness: tool-loop cap (40 per turn), output truncation (50k chars),
+  stdin-closed handling, `toolCallsInTurn` reset per prompt, streamed output
+  no longer duplicated.
+- `npm-wrapper/bin/index.js`: `agent --help/-h`, new flags `--api-key/-k`,
+  `--cwd`, `--yes/-y`, `--auto`, `--stream`; unknown options exit with usage.
+- Test-only internals export gated by `AMCOLI_AGENT_TEST=1`
+  (tools/config/parseToolCall/buildSystemPrompt) for CI harnesses.
+- Verified: 18 tool-level assertions pass; e2e mock-LLM session (tool call +
+  approval + history persistence) passes; slash-command script passes; SSE
+  streaming e2e passes; `--yes` auto-approval works. Not committed yet.
+
 ## Verification So Far
 
 - `cmake --build build --config Release` succeeds with zero warnings
@@ -129,3 +149,9 @@ session).
   `CMakeLists.txt` `project(VERSION ...)`, `npm-wrapper/package.json`, AND the
   repo-root `VERSION` file together (see `CONTEXT.md` §8).
 - Avoid committing generated build outputs, `.models/`, or GGUF model files.
+- The agent lives in `npm-wrapper/` (`lib/agent.js` + `bin/index.js`) and runs
+  via `amcoli agent` (Node), NOT the native exe. Default endpoint is local
+  Ollama (`http://127.0.0.1:11434/v1`, model `qwen-coder-32b`). Override with
+  `AMCOLI_API_URL` / `AMCOLI_MODEL` / `AMCOLI_API_KEY` env vars or CLI flags.
+- After editing agent.js, re-run `node --check npm-wrapper/lib/agent.js` and the
+  harnesses in `%TEMP%\opencode\amcoli-agent-*.js` (mock LLM server pattern).
