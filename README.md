@@ -61,6 +61,7 @@ By swapping these specialized "experts" in and out of your laptop's memory from 
 - **Built-in HF Downloader**: Pulls models directly from Hugging Face with a real-time progress bar; **resumable** (`-C -`) downloads survive interruptions.
 - **36-Model Registry + Health Check**: `amcoli list` prints the full catalog, `amcoli check` verifies every registry URL is reachable, and `amcoli info <alias>` shows details for one model.
 - **Automatic Update Notifications**: Checks once per day (in the background) whether a newer AMcoli release exists.
+- **Agentic Coding Assistant** (`amcoli agent`): A local AI assistant (via the npm wrapper) with real filesystem + shell tools, per-call approval, session history, and optional streaming.
 
 ---
 
@@ -211,14 +212,43 @@ If Smart App Control is in "Enforced" mode, it blocks all unsigned executables:
 ## Usage
 
 ### 1. Agentic Workflow CLI (Claude Code style)
-You can launch an autonomous, agentic coding assistant that can run local commands, view files, and list directories with your explicit approval:
+You can launch an autonomous, agentic coding assistant that reads, searches, edits files and runs local commands — with your explicit approval:
 ```bash
-# Start the agent using default Ollama server and Qwen-Coder model
+# Start the agent using the default local Ollama server
 amcoli agent
 
-# Or configure a custom API endpoint and model
-amcoli agent --api-url http://127.0.0.1:11434/v1 --model qwen2.5-coder:7b
+# Configure a custom API endpoint, model, and API key
+amcoli agent --api-url http://127.0.0.1:11434/v1 --model qwen2.5-coder:7b --api-key sk-...
 ```
+
+**Flags:**
+```bash
+amcoli agent [options]
+  -u, --api-url <url>   OpenAI-compatible API endpoint (default: http://127.0.0.1:11434/v1)
+  -m, --model <name>    Model name (default: qwen-coder-32b)
+  -k, --api-key <key>   API key for the endpoint
+  -y, --yes             Auto-approve file modifications and command execution
+      --auto            Auto-approve read-only tools, prompt for the rest
+      --stream          Stream model output as it is generated
+```
+
+These can also be set via the `AMCOLI_API_URL`, `AMCOLI_MODEL`, and `AMCOLI_API_KEY` environment variables.
+
+**Tools** the agent can call on your behalf:
+| Tool | Purpose |
+| :--- | :--- |
+| `list_dir` | List a directory's contents |
+| `read_file` | Read a text file (line ranges; 5 MB guard) |
+| `search_files` | Substring/regex search across a directory tree |
+| `get_system_info` | CPU / RAM / disk / OS facts |
+| `write_file` | Create or overwrite a file |
+| `edit_file` | Find-and-replace edit (`all` for every occurrence) |
+| `run_command` | Run a shell command (compile, test, git, …) |
+| `run_amcoli` | Run the local AMcoli binary (`list`, `check`, `info`, `bench`, …) |
+
+**Slash commands** inside the session: `/help`, `/clear`, `/reset`, `/model [name]`, `/api [url]`, `/quit` (or `q`).
+
+Session history persists to `~/.amcoli/agent-history.jsonl` so conversations resume across sessions; `/reset` clears it.
 
 ### 2. Native Engine CLI
 Start the C++ interactive visual selector and live chat/cache execution:
@@ -241,6 +271,7 @@ amcoli run --model .models/Qwen1.5-MoE-A2.7B-Chat-Q4_K_M.gguf
 | :--- | :--- |
 | `amcoli` | Interactive model selector → download → chat |
 | `amcoli run` | Chat loop (real llama.cpp token decoding + live cache stats) |
+| `amcoli agent` | Agentic coding assistant (real filesystem + shell tools; see §1) |
 | `amcoli pull <alias>` | Download a model from the registry (resumable; `--dry-run` previews it) |
 | `amcoli list` | Print the full 36-model registry table |
 | `amcoli check` | Verify all 36 registry URLs are reachable |
