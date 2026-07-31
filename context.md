@@ -85,12 +85,23 @@ AMcoli/
    VT processing), welcome banner, interactive model selector loop, llama.cpp
    inference loop, and the `pull`/`list`/`check`/`info`/`version`/`bench`/
    `recommend` commands.
+6. **`npm-wrapper/lib/agent.js`** — The `amcoli agent` interface (Node, runs via
+   the npm wrapper, not the native exe). A local AI coding assistant with real
+   tools (`list_dir`, `read_file` w/ line ranges + size guard, `search_files`
+   w/ regex, `get_system_info`, `write_file`, `edit_file`, `run_command`,
+   `run_amcoli`), approval flow (`--yes`, `--auto`, per-call prompt), JSONL
+   history in `~/.amcoli/agent-history.jsonl`, HTTPS + Bearer API-key support,
+   optional SSE streaming, and `/model`/`/api`/`/clear`/`/reset` slash commands.
+   Defaults to local Ollama (`http://127.0.0.1:11434/v1`, `qwen-coder-32b`);
+   overridable via CLI flags or `AMCOLI_API_URL`/`AMCOLI_MODEL`/`AMCOLI_API_KEY`
+   env vars.
 
 ### CLI commands
 | Command       | Purpose                                                        |
 |---------------|----------------------------------------------------------------|
 | `amcoli`      | Interactive model selector → download → chat                   |
 | `amcoli run`  | Chat loop (`/help`, `/stats`, `/memory`, `/clear`, `/model`…)  |
+| `amcoli agent`| Agentic coding assistant (Node/npm wrapper; real filesystem + shell tools) |
 | `amcoli pull <alias>` | Download a model from the registry (resumable)          |
 | `amcoli list` | Print the model registry table without entering the selector   |
 | `amcoli check`| Verify all 36 registry URLs are reachable (curl range GET)     |
