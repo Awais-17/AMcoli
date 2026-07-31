@@ -70,7 +70,7 @@ static double get_time_ms(void) {
  *   name (string), n_dims, dims[], type (enum), offset (relative to data start)
  */
 
-#define GGUF_MAGIC 0x46475547  /* "GGUF" in little-endian */
+#define GGUF_MAGIC 0x46554747  /* "GGUF" in little-endian */
 
 /* GGUF value types */
 enum gguf_type {
@@ -128,13 +128,6 @@ static bool reader_has(const struct gguf_reader *r, size_t n) {
     return (r->pos + n) <= r->size;
 }
 
-static uint8_t read_u8(struct gguf_reader *r) {
-    if (!reader_has(r, 1)) return 0;
-    uint8_t v = r->base[r->pos];
-    r->pos += 1;
-    return v;
-}
-
 static uint32_t read_u32(struct gguf_reader *r) {
     if (!reader_has(r, 4)) return 0;
     uint32_t v;
@@ -148,18 +141,6 @@ static uint64_t read_u64(struct gguf_reader *r) {
     uint64_t v;
     memcpy(&v, r->base + r->pos, 8);
     r->pos += 8;
-    return v;
-}
-
-static int32_t read_i32(struct gguf_reader *r) {
-    return (int32_t)read_u32(r);
-}
-
-static float read_f32(struct gguf_reader *r) {
-    if (!reader_has(r, 4)) return 0.0f;
-    float v;
-    memcpy(&v, r->base + r->pos, 4);
-    r->pos += 4;
     return v;
 }
 

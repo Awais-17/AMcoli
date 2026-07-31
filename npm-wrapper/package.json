@@ -1,6 +1,6 @@
 {
   "name": "@github/amcoli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Universal MoE Disk-Streaming Inference Engine wrapper",
   "main": "bin/index.js",
   "bin": {

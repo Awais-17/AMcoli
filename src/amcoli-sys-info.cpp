@@ -4,6 +4,7 @@
  */
 
 #include "amcoli-sys-info.h"
+#include "amcoli-downloader.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -302,6 +303,35 @@ void amcoli_print_recommendations(void) {
     double ram_gb = (double)total_ram / (1024.0 * 1024.0 * 1024.0);
     double vram_gb = (double)total_vram / (1024.0 * 1024.0 * 1024.0);
 
+    int count = 0;
+    const struct amcoli_model_info *registry = amcoli_get_model_registry(&count);
+
+    /* AMcoli streams experts from SSD, so only the resident (dense) part of
+     * an MoE needs to fit in RAM. Conservatively treat the full size_gb as
+     * the resident requirement — anything that fits comfortably is a safe
+     * recommendation; larger models are still viable on fast NVMe. */
+    double safe_budget = ram_gb * 0.85;
+
+    const struct amcoli_model_info *best_fit = NULL;  /* largest MoE that fits in RAM */
+    const struct amcoli_model_info *best_small = NULL;/* best MoE <= 8 GB file size  */
+    const struct amcoli_model_info *best_any = NULL;  /* largest model overall       */
+    const struct amcoli_model_info *best_moe = NULL;  /* largest MoE overall         */
+
+    for (int i = 0; i < count; i++) {
+        const struct amcoli_model_info *m = &registry[i];
+        if (!best_any || m->total_params > best_any->total_params) best_any = m;
+
+        if (m->expert_size_mb > 0.0) {
+            if (!best_moe || m->total_params > best_moe->total_params) best_moe = m;
+            if (m->size_gb <= safe_budget && (!best_fit || m->total_params > best_fit->total_params)) {
+                best_fit = m;
+            }
+            if (m->size_gb <= 8.0 && (!best_small || m->total_params > best_small->total_params)) {
+                best_small = m;
+            }
+        }
+    }
+
     fprintf(stderr, "\n╔══════════════════════════════════════════════════════════╗\n");
     fprintf(stderr, "║           AMcoli — Model Recommendations Guide           ║\n");
     fprintf(stderr, "╠══════════════════════════════════════════════════════════╣\n");
@@ -313,45 +343,30 @@ void amcoli_print_recommendations(void) {
         fprintf(stderr, "║    GPU VRAM:   Not detected (or disabled)                ║\n");
     }
     fprintf(stderr, "╠══════════════════════════════════════════════════════════╣\n");
-    fprintf(stderr, "║  Compatible MoE Models & Quantizations:                  ║\n");
+    fprintf(stderr, "║  Best MoE fit for your RAM:                              ║\n");
 
-    if (ram_gb < 6.0) {
-        fprintf(stderr, "║    Your system RAM is too low to run large MoEs          ║\n");
-        fprintf(stderr, "║    comfortably.                                          ║\n");
-        fprintf(stderr, "║                                                          ║\n");
-        fprintf(stderr, "║    Recommended model:                                    ║\n");
-        fprintf(stderr, "║    - Qwen1.5-MoE-A2.7B at Q3_K_S or Q3_K_M               ║\n");
-        fprintf(stderr, "║      (lightweight, requires ~5.5 - 6.5 GB RAM)           ║\n");
+    if (best_fit) {
+        fprintf(stderr, "║    - %-58s║\n", best_fit->name);
+        fprintf(stderr, "║      (alias: %s, %.2f GB file, %.1fB params, ", best_fit->alias, best_fit->size_gb, best_fit->total_params);
+        fprintf(stderr, "%.1fB active)\n", best_fit->active_params);
+        fprintf(stderr, "║       pull command: amcoli pull %-35s║\n", best_fit->alias);
+    } else {
+        fprintf(stderr, "║    Your RAM is too low for a comfortable MoE fit;      ║\n");
+        fprintf(stderr, "║    even small MoEs will rely on SSD streaming.          ║\n");
     }
-    else if (ram_gb < 12.0) {
-        fprintf(stderr, "║  [Tier: Entry MoE]                                       ║\n");
-        fprintf(stderr, "║    - Qwen1.5-MoE-A2.7B-Chat (Recommended)                ║\n");
-        fprintf(stderr, "║      (requires ~8.2 GB, runs fast and clean)             ║\n");
-        fprintf(stderr, "║    - JetMoe-8B-Chat                                      ║\n");
-        fprintf(stderr, "║      (requires ~4.8 GB, fits easily)                     ║\n");
+
+    if (best_small && best_small != best_fit) {
+        fprintf(stderr, "╠══════════════════════════════════════════════════════════╣\n");
+        fprintf(stderr, "║  Lightweight MoE (fits on low-end hardware):           ║\n");
+        fprintf(stderr, "║    - %-58s║\n", best_small->name);
+        fprintf(stderr, "║      (alias: %s, %.2f GB file)                            ║\n", best_small->alias, best_small->size_gb);
     }
-    else if (ram_gb < 24.0) {
-        fprintf(stderr, "║  [Tier: Mid-range MoE]                                   ║\n");
-        fprintf(stderr, "║    - Qwen3-30B-A3B-Instruct (Recommended)                ║\n");
-        fprintf(stderr, "║      (outstanding quality, requires ~18.2 GB space)      ║\n");
-        fprintf(stderr, "║    - Mixtral-8x7B at Q4_K_M                              ║\n");
-        fprintf(stderr, "║      (requires ~26.4 GB resident memory)                 ║\n");
-    }
-    else if (ram_gb < 48.0) {
-        fprintf(stderr, "║  [Tier: High-end MoE]                                    ║\n");
-        fprintf(stderr, "║    - Mixtral-8x7B at Q5_K_M or Q8_0 (Recommended)        ║\n");
-        fprintf(stderr, "║      (outstanding quality, requires ~11 - 18 GB RAM)     ║\n");
-        fprintf(stderr, "║    - DeepSeek-V3 / GLM-5.2 at IQ1_S or IQ1_M             ║\n");
-        fprintf(stderr, "║      (experimental frontier size, requires ~35 - 45 GB   ║\n");
-        fprintf(stderr, "║       resident memory, fits tightly on 48GB systems).    ║\n");
-    }
-    else {
-        fprintf(stderr, "║  [Tier: Frontier MoE]                                    ║\n");
-        fprintf(stderr, "║    - DeepSeek-V3 / GLM-5.2 at IQ2_XXS or Q2_K            ║\n");
-        fprintf(stderr, "║      (requires ~45 - 60 GB resident memory)              ║\n");
-        fprintf(stderr, "║    - DeepSeek-V3 / GLM-5.2 at Q4_K_M                     ║\n");
-        fprintf(stderr, "║      (highest standard quality, requires ~90 - 120 GB    ║\n");
-        fprintf(stderr, "║       resident memory).                                  ║\n");
+
+    if (best_moe && best_moe != best_fit) {
+        fprintf(stderr, "╠══════════════════════════════════════════════════════════╣\n");
+        fprintf(stderr, "║  Largest MoE in registry (best on fast NVMe + big RAM): ║\n");
+        fprintf(stderr, "║    - %-58s║\n", best_moe->name);
+        fprintf(stderr, "║      (alias: %s, %.2f GB file)                            ║\n", best_moe->alias, best_moe->size_gb);
     }
 
     fprintf(stderr, "╠══════════════════════════════════════════════════════════╣\n");
@@ -360,5 +375,6 @@ void amcoli_print_recommendations(void) {
     fprintf(stderr, "║    - NVMe Gen 3 (3,500 MB/s): OK (1 - 3 tokens/sec)      ║\n");
     fprintf(stderr, "║    - NVMe Gen 4 (7,000 MB/s): Good (2 - 5 tokens/sec)    ║\n");
     fprintf(stderr, "║    * SATA SSDs or HDDs are NOT recommended.              ║\n");
+    fprintf(stderr, "║  View all 36 models anytime with: amcoli list             ║\n");
     fprintf(stderr, "╚══════════════════════════════════════════════════════════╝\n\n");
 }

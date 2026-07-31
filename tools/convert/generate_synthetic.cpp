@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     uint8_t *buf = (uint8_t *)calloc(1, buf_size);
     uint8_t *p = buf;
 
-    wr_u32(&p, 0x46475547); /* magic */
+    wr_u32(&p, 0x46554747); /* magic */
     wr_u32(&p, 3);          /* version */
 
     /* Total tensors = n_layers * n_experts * 3 + n_layers */

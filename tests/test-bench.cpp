@@ -66,7 +66,7 @@ static uint8_t *build_test_moe_gguf(size_t *size_out) {
     uint8_t *buf = (uint8_t *)calloc(1, buf_size);
     uint8_t *p = buf;
 
-    wr_u32(&p, 0x46475547);
+    wr_u32(&p, 0x46554747);
     wr_u32(&p, 3);
     wr_u64(&p, 2 * 4 * 3 + 2); /* 2 layers × 4 experts × 3 tensors + 2 gates */
     wr_u64(&p, 3);

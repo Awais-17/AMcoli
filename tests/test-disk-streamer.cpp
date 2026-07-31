@@ -168,7 +168,7 @@ static struct synthetic_gguf build_synthetic_gguf(void) {
     uint8_t *p = buf;
 
     /* Header */
-    write_u32(&p, 0x46475547); /* magic "GGUF" */
+    write_u32(&p, 0x46554747); /* magic "GGUF" */
     write_u32(&p, 3);          /* version */
 
     /* We'll have 2 layers × 4 experts × 3 tensors = 24 tensors

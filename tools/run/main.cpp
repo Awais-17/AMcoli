@@ -43,6 +43,7 @@ struct cli_args {
     int32_t     prefetch_depth;
     bool        model_info;    /* --model-info: just print config and exit */
     bool        stats;         /* --stats: print live stats */
+    bool        dry_run;       /* --dry-run: pull without downloading */
     int32_t     verbosity;
     const char *prompt;        /* --prompt or -p */
     int32_t     n_predict;     /* -n: tokens to generate */
@@ -61,6 +62,27 @@ static struct cli_args parse_args(int argc, char **argv) {
     args.zipf_exponent = 1.0;
 
     if (argc < 2) return args;
+
+    /* Support bare flags in argv[1] like `amcoli --version` / `amcoli --help` */
+    if (strcmp(argv[1], "--version") == 0) {
+        args.command = "version";
+        return args;
+    }
+    if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "help") == 0) {
+        args.command = "help";
+        return args;
+    }
+    if (strcmp(argv[1], "list") == 0 ||
+        strcmp(argv[1], "check") == 0 ||
+        strcmp(argv[1], "info") == 0 ||
+        strcmp(argv[1], "version") == 0)
+    {
+        /* These commands take the positional model alias in argv[2] */
+        args.command = argv[1];
+        if (argc >= 3) args.model_path = argv[2];
+        return args;
+    }
+
     args.command = argv[1];
 
     for (int i = 2; i < argc; i++) {
@@ -92,6 +114,10 @@ static struct cli_args parse_args(int argc, char **argv) {
             args.model_info = true;
         } else if (strcmp(argv[i], "--stats") == 0) {
             args.stats = true;
+        } else if (strcmp(argv[i], "--dry-run") == 0) {
+            args.dry_run = true;
+        } else if (strcmp(argv[i], "--version") == 0) {
+            args.command = "version";
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
             args.verbosity = 2;
         } else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--quiet") == 0) {
@@ -128,7 +154,11 @@ static void print_usage(const char *prog) {
         "  run      Run local llama.cpp interactive model inference\n"
         "  serve    Start OpenAI-compatible API server (TODO)\n"
         "  bench    Run MoE cache performance benchmark\n"
-        "  pull     Download a model from Hugging Face\n"
+        "  pull     Download a model from Hugging Face (resumable)\n"
+        "  list     Print the model registry table\n"
+        "  check    Verify all registry URLs are reachable\n"
+        "  info     Show details for a single registered model\n"
+        "  version  Print the AMcoli version string\n"
         "  recommend Print system specs and recommend compatible MoE models\n"
         "  convert  Convert/re-quantize GGUF models (TODO)\n"
         "\n"
@@ -140,19 +170,23 @@ static void print_usage(const char *prog) {
         "      --prefetch-depth <N> Layers ahead to prefetch (default: 0)\n"
         "      --model-info         Print MoE config and exit\n"
         "      --stats              Print live statistics\n"
+        "      --dry-run            With pull: show details without downloading\n"
         "  -p, --prompt <text>      Input prompt for future real inference\n"
         "  -n <N>                   Tokens to simulate in bench mode (default: 128)\n"
         "  -o, --output <path>      Output JSON file for benchmark\n"
         "      --zipf <val>         Zipfian exponent for benchmark (default: 1.0)\n"
         "  -v, --verbose            Verbose output\n"
         "  -q, --quiet              Minimal output\n"
+        "      --version            Print version and exit\n"
         "\n"
         "Examples:\n"
         "  %s run -m mixtral-8x7b-q4.gguf --ram-gb auto --stats\n"
         "  %s run -m model.gguf --model-info\n"
+        "  %s pull qwen-3b --dry-run\n"
+        "  %s check\n"
         "  %s serve -m model.gguf --ram-gb 24 --vram-gb 8\n"
         "\n",
-        AMCOLI_VERSION_STRING, prog, prog, prog, prog
+        AMCOLI_VERSION_STRING, prog, prog, prog, prog, prog, prog
     );
 }
 
@@ -267,14 +301,20 @@ static void print_model_registry_table(void) {
     }
 
     /* Recommendation Logic */
+    /* Data-driven recommendation: pick the largest MoE that fits comfortably
+     * in the available RAM budget (experts stream from SSD). */
+    int count = 0;
+    const struct amcoli_model_info *registry = amcoli_get_model_registry(&count);
+
     const char *rec_alias = "qwen-14b";
     const char *rec_name = "Qwen3-30B-A3B-Instruct";
-    if (total_ram_gb < 8.0) {
-        rec_alias = "qwen-3b";
-        rec_name = "Qwen1.5-MoE-A2.7B-Chat";
-    } else if (total_ram_gb >= 24.0) {
-        rec_alias = "mixtral";
-        rec_name = "Mixtral-8x7B-Instruct-v0.1";
+    double safe_budget = total_ram_gb * 0.85;
+    for (int i = 0; i < count; i++) {
+        if (registry[i].expert_size_mb == 0.0) continue;
+        if (registry[i].size_gb <= safe_budget) {
+            rec_alias = registry[i].alias;
+            rec_name = registry[i].name;
+        }
     }
     
     fprintf(stderr, "\n\033[1;30m┌──────────────────────────────────────────────────────────┐\033[0m\n");
@@ -316,9 +356,6 @@ static void print_model_registry_table(void) {
     fprintf(stderr, "\033[1;30m│\033[0m  \033[1;32mRecommend\033[0m   : %-42s\033[1;30m│\033[0m\n", rec_str);
     fprintf(stderr, "\033[1;30m└──────────────────────────────────────────────────────────┘\033[0m\n");
 
-    int count = 0;
-    const struct amcoli_model_info *registry = amcoli_get_model_registry(&count);
-    
     fprintf(stderr, "\n┌─────┬──────────────────────────────────────┬──────────────┬──────────────┬──────────────────┬──────────┐\n");
     fprintf(stderr, "│ Idx │ Model Name                           │ Total Params │ Active/Token │ Est. Speed (SSD) │ Status   │\n");
     fprintf(stderr, "├─────┼──────────────────────────────────────┼──────────────┼──────────────┼──────────────────┼──────────┤\n");
@@ -380,16 +417,65 @@ int main(int argc, char **argv) {
         args.command = "run";
     }
 
+    /* Background, once-per-day update check — never blocks startup.
+     * Only launched for long-running commands so the detached thread has
+     * time to finish before the process exits. */
+    if (strcmp(args.command, "run") == 0 || strcmp(args.command, "pull") == 0) {
+        std::thread([]() {
+            amcoli_check_for_update();
+        }).detach();
+    }
+
     if (strcmp(args.command, "run") != 0 &&
         strcmp(args.command, "serve") != 0 &&
         strcmp(args.command, "bench") != 0 &&
         strcmp(args.command, "pull") != 0 &&
+        strcmp(args.command, "list") != 0 &&
+        strcmp(args.command, "check") != 0 &&
+        strcmp(args.command, "info") != 0 &&
+        strcmp(args.command, "version") != 0 &&
+        strcmp(args.command, "help") != 0 &&
         strcmp(args.command, "recommend") != 0 &&
         strcmp(args.command, "convert") != 0)
     {
         fprintf(stderr, "Error: Unknown command '%s'\n", args.command);
         print_usage(argv[0]);
         return 1;
+    }
+
+    /* ── version command (no model required) ───────────────────────── */
+
+    if (strcmp(args.command, "version") == 0) {
+        fprintf(stderr, "AMcoli v%s\n", AMCOLI_VERSION_STRING);
+        return 0;
+    }
+
+    /* ── help command (no model required) ──────────────────────────── */
+
+    if (strcmp(args.command, "help") == 0) {
+        print_usage(argv[0]);
+        return 0;
+    }
+
+    /* ── list / check commands (no model required) ─────────────────── */
+
+    if (strcmp(args.command, "list") == 0) {
+        print_model_registry_table();
+        return 0;
+    }
+
+    if (strcmp(args.command, "check") == 0) {
+        amcoli_check_registry();
+        return 0;
+    }
+
+    if (strcmp(args.command, "info") == 0) {
+        if (!args.model_path) {
+            fprintf(stderr, "Error: Model alias is required (e.g. amcoli info qwen-3b)\n");
+            return 1;
+        }
+        amcoli_dry_run(args.model_path);
+        return 0;
     }
 
     /* If no model path is specified for the 'run' command, show an interactive model selector */
@@ -422,6 +508,20 @@ int main(int argc, char **argv) {
             
             if (strcmp(choice, "q") == 0 || strcmp(choice, "Q") == 0 || strcmp(choice, "/exit") == 0 || strcmp(choice, "/quit") == 0) {
                 return 0;
+            }
+            
+            if (strcmp(choice, "/help") == 0 || strcmp(choice, "/?") == 0) {
+                fprintf(stderr, "\n  Enter a model number (1-%d) to select, or:\n"
+                    "    /recommend     Show hardware-based recommendations\n"
+                    "    /version       Show the AMcoli version\n"
+                    "    /model         Refresh the registry table\n"
+                    "    q, /exit       Quit\n\n", count);
+                continue;
+            }
+            
+            if (strcmp(choice, "/version") == 0) {
+                fprintf(stderr, "AMcoli v%s\n", AMCOLI_VERSION_STRING);
+                continue;
             }
             
             if (strcmp(choice, "/recommend") == 0 || strcmp(choice, "/recoment") == 0) {
@@ -489,6 +589,9 @@ int main(int argc, char **argv) {
         if (!args.model_path) {
             fprintf(stderr, "Error: Model alias is required (e.g. amcoli pull qwen-3b)\n");
             return 1;
+        }
+        if (args.dry_run) {
+            return amcoli_dry_run(args.model_path) ? 0 : 1;
         }
         bool ok = amcoli_download_model(args.model_path);
         return ok ? 0 : 1;
@@ -564,7 +667,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "\n=== AMcoli Interactive Inference Loop ===\n");
         fprintf(stderr, "  Model:       %s\n", params.disk.model_path);
         fprintf(stderr, "  Status:      Live. Powered by llama.cpp local inference engine.\n");
-        fprintf(stderr, "  Commands:    /exit or /quit (exit), /stats (toggle metrics), /clear (clear screen)\n\n");
+        fprintf(stderr, "  Commands:    /help (list), /exit or /quit (exit), /stats (metrics), /memory (cache), /clear (screen)\n\n");
 
         char input[2048];
         bool show_live_stats = args.stats;
@@ -592,6 +695,27 @@ int main(int argc, char **argv) {
             /* Check slash commands */
             if (strcmp(input, "/exit") == 0 || strcmp(input, "/quit") == 0) {
                 break;
+            }
+            if (strcmp(input, "/help") == 0 || strcmp(input, "/?") == 0) {
+                fprintf(stderr, "\n  AMcoli chat commands:\n"
+                    "    /exit, /quit   Exit the chat loop\n"
+                    "    /help          Show this help\n"
+                    "    /version       Show the AMcoli version\n"
+                    "    /stats         Toggle the live cache/streaming monitor\n"
+                    "    /memory        Show live RAM/VRAM cache utilization\n"
+                    "    /model         Open the model downloader & switcher\n"
+                    "    /recommend     Print hardware-based model recommendations\n"
+                    "    /clear         Clear the screen\n"
+                    "    anything else  Sent to llama.cpp as a prompt\n\n");
+                continue;
+            }
+            if (strcmp(input, "/version") == 0) {
+                fprintf(stderr, "AMcoli v%s\n", AMCOLI_VERSION_STRING);
+                continue;
+            }
+            if (strcmp(input, "/memory") == 0) {
+                print_chat_stats_panel(ctx, params.disk.model_path);
+                continue;
             }
             if (strcmp(input, "/stats") == 0) {
                 show_live_stats = !show_live_stats;
@@ -689,7 +813,7 @@ int main(int argc, char **argv) {
             if (lctx && lmodel) {
                 // Tokenize prompt
                 std::vector<llama_token> tokens(strlen(input) + 4);
-                int n_tokens = llama_tokenize(lmodel, input, strlen(input), tokens.data(), tokens.size(), true, true);
+                int n_tokens = llama_tokenize(lmodel, input, (int32_t)strlen(input), tokens.data(), (int32_t)tokens.size(), true, true);
                 if (n_tokens < 0) {
                     goto run_simulation;
                 }
@@ -714,7 +838,7 @@ int main(int argc, char **argv) {
                     batch.n_tokens++;
                 }
 
-                int32_t pos = tokens.size();
+                int32_t pos = (int32_t)tokens.size();
                 int32_t n_generated = 0;
 
                 while (n_generated < args.n_predict) {

@@ -25,7 +25,7 @@
 
 /* ── GGUF parsing (shared with disk-streamer, inlined for now) ───── */
 
-#define GGUF_MAGIC_VAL 0x46475547
+#define GGUF_MAGIC_VAL 0x46554747
 
 enum {
     KV_TYPE_UINT8    = 0,

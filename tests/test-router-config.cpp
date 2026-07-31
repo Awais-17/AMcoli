@@ -80,7 +80,7 @@ static uint8_t *build_mixtral_gguf(size_t *size_out) {
     uint8_t *buf = (uint8_t *)calloc(1, buf_size);
     uint8_t *p = buf;
 
-    wr_u32(&p, 0x46475547); /* magic */
+    wr_u32(&p, 0x46554747); /* magic */
     wr_u32(&p, 3);          /* version */
 
     uint64_t n_tensors = 2 * 8 * 3 + 2; /* 2 layers × 8 experts × 3 tensors + 2 gates */
@@ -133,7 +133,7 @@ static uint8_t *build_deepseek_gguf(size_t *size_out) {
     uint8_t *buf = (uint8_t *)calloc(1, buf_size);
     uint8_t *p = buf;
 
-    wr_u32(&p, 0x46475547);
+    wr_u32(&p, 0x46554747);
     wr_u32(&p, 3);
 
     uint64_t n_tensors = 2 * 16 * 3 + 2 * 3 + 2;
@@ -203,7 +203,7 @@ static uint8_t *build_dense_gguf(size_t *size_out) {
     uint8_t *buf = (uint8_t *)calloc(1, buf_size);
     uint8_t *p = buf;
 
-    wr_u32(&p, 0x46475547);
+    wr_u32(&p, 0x46554747);
     wr_u32(&p, 3);
     wr_u64(&p, 1); /* 1 tensor */
     wr_u64(&p, 1); /* 1 KV */
