@@ -17,9 +17,11 @@
 **Prototype a disk-streaming runtime for massive GGUF Mixture-of-Experts (MoE)
 models on constrained hardware.**
 
-AMcoli treats disk, RAM, and VRAM as a unified memory hierarchy — streaming experts from NVMe on demand, caching hot experts in RAM/VRAM, and prefetching likely next-layer experts to overlap I/O with compute.
+AMcoli treats disk, RAM, and VRAM as a unified memory hierarchy — streaming experts from NVMe on demand, caching hot experts in RAM/VRAM, and prefetching likely next-layer experts to overlap I/O with computation.
 
 AMcoli is integrated with [llama.cpp](https://github.com/ggerganov/llama.cpp) for model-generic GGUF loading, tokenization, and local generation. The codebase implements the GGUF inspection, expert indexing, active memory cache management, NVMe streamer, and interactive token-decoding loops.
+
+**Current version: 0.1.1** — see the [Release](https://github.com/Awais-17/AMcoli/releases) page.
 
 ---
 
@@ -50,56 +52,64 @@ By swapping these specialized "experts" in and out of your laptop's memory from 
 
 ## Key Features
 
-- **Architecture-generic**: Runs Mixtral, Qwen-MoE, DeepSeek-V3, GLM-5.1, and any GGUF MoE model without per-model code changes.
+- **Architecture-generic**: Runs Mixtral, Qwen-MoE, DeepSeek, GLM, Kimi, Phi-MoE, OLMoE, Granite, Jamba, DBRX, and any GGUF MoE model without per-model code changes.
 - **Three-tier memory hierarchy**: VRAM (hot) → RAM (warm) → Disk/SSD (cold).
 - **Persistent Two-Tier Expert Cache**: Keeps frequently used experts cached close to compute, with LRU/LFU eviction.
 - **Speculative Prefetching**: Uses router logits to predict next-layer experts, overlapping disk I/O with computation.
 - **Dynamic System Spec Panel**: Auto-detects system specs (CPU cores, RAM size, GPU adapter details via DXGI/Win32, SSD disk space).
 - **Intelligent Model Selector**: Highlights compatible models based on your hardware specs.
-- **Built-in HF Downloader**: Pulls models directly from Hugging Face with real-time percentage and progress bar terminal animation.
+- **Built-in HF Downloader**: Pulls models directly from Hugging Face with a real-time progress bar; **resumable** (`-C -`) downloads survive interruptions.
+- **36-Model Registry + Health Check**: `amcoli list` prints the full catalog, `amcoli check` verifies every registry URL is reachable, and `amcoli info <alias>` shows details for one model.
+- **Automatic Update Notifications**: Checks once per day (in the background) whether a newer AMcoli release exists.
 
 ---
 
 ## Registered Models
 
-AMcoli contains a built-in downloader registry for the highest-performing open source MoE and Coding families:
+AMcoli contains a built-in downloader registry of 36 models across the highest-performing open-source MoE and Coding/Dense families. Each row shows the `pull` alias, the quantized GGUF used, total/active parameter counts, and download size.
 
-| Index | Model Name | Total Params | Active Params | Size (GB) | Focus / Type |
+Run `amcoli list` to print this table in the terminal, `amcoli info <alias>` for one model's details, and `amcoli check` to verify every URL is reachable.
+
+| Alias | Model (Quant) | Total | Active | Size (GB) | Type |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | **Qwen1.5-MoE-A2.7B-Chat** | 14.3B | 2.7B | 8.2 GB | Chat MoE |
-| 2 | **Qwen3-30B-A3B-Instruct** | 30.5B | 3.3B | 18.2 GB | Chat MoE |
-| 3 | **Qwen2-57B-A14B-Instruct** | 57.0B | 14.0B | 34.2 GB | Chat MoE |
-| 4 | **DeepSeek-MoE-16B-Chat** | 16.4B | 2.8B | 9.2 GB | Chat MoE |
-| 5 | **DeepSeek-Coder-V2-Lite-Instruct** | 16.4B | 2.4B | 10.4 GB | Coding MoE |
-| 6 | **DeepSeek-V3** | 671.0B | 37.0B | 23.8 GB | Chat MoE (Extreme) |
-| 7 | **JetMoe-8B-Chat** | 8.0B | 2.2B | 4.8 GB | Lightweight MoE |
-| 8 | **DBRX-Instruct** | 132.0B | 36.0B | 46.2 GB | Chat MoE |
-| 9 | **Nemotron-4-340B-Base** | 340.0B | 68.0B | 96.5 GB | Base MoE |
-| 10 | **Nemotron-4-340B-Instruct** | 340.0B | 68.0B | 96.5 GB | Instruct MoE |
-| 11 | **Nemotron-4-340B-Reward** | 340.0B | 68.0B | 96.5 GB | Reward MoE |
-| 12 | **Grok-1** | 314.0B | 86.0B | 110.3 GB | Large MoE |
-| 13 | **Mixtral-8x7B-Instruct-v0.1** | 46.7B | 12.9B | 26.4 GB | Chat MoE |
-| 14 | **Mixtral-8x22B-v0.1** | 141.0B | 39.0B | 45.1 GB | Large MoE |
-| 15 | **GLM-5.1** | 754.0B | 40.0B | 200.0 GB | Large MoE (Agentic) |
-| 16 | **GLM-5.2-Colibri** | 744.0B | 40.0B | 238.0 GB | Large MoE (Agentic) |
-| 17 | **Kimi-K2.6** | 1000.0B | 68.0B | 350.0 GB | Large MoE (Agentic) |
-| 18 | **Kimi-K3** | 2800.0B | 120.0B | 980.0 GB | Large MoE (Extreme) |
-| 19 | **Kimi-Dev-72B-Coder** | 72.5B | 72.5B | 42.5 GB | Coding (Dense) |
-| 20 | **Kimi-Coder-135M** | 0.13B | 0.13B | 0.1 GB | Coding (Dense) |
-| 21 | **Qwen2.5-Coder-7B-Instruct** | 7.6B | 7.6B | 4.7 GB | Coding (Dense) |
-| 22 | **Qwen2.5-Coder-32B-Instruct** | 32.5B | 32.5B | 20.3 GB | Coding (Dense) |
-| 23 | **Meta-Llama-3.1-8B-Instruct** | 8.0B | 8.0B | 4.9 GB | General (Dense) |
-| 24 | **Meta-Llama-3.1-70B-Instruct** | 70.6B | 70.6B | 43.0 GB | General (Dense) |
-| 25 | **Llama-3.2-1B-Instruct** | 1.2B | 1.2B | 1.2 GB | General (Dense) |
-| 26 | **Llama-3.2-3B-Instruct** | 3.2B | 3.2B | 2.0 GB | General (Dense) |
-| 27 | **Gemma-2-2b-it** | 2.6B | 2.6B | 1.7 GB | General (Dense) |
-| 28 | **Gemma-2-9b-it** | 9.2B | 9.2B | 5.7 GB | General (Dense) |
-| 29 | **Gemma-2-27b-it** | 27.2B | 27.2B | 17.4 GB | General (Dense) |
-| 30 | **Qwen2.5-7B-Instruct** | 7.6B | 7.6B | 4.7 GB | General (Dense) |
-| 31 | **Qwen2.5-72B-Instruct** | 72.5B | 72.5B | 46.5 GB | General (Dense) |
-| 32 | **Command-R-Plus** | 104.0B | 104.0B | 62.0 GB | Large MoE |
-| 33 | **Phi-3-mini-128k-instruct** | 3.8B | 3.8B | 2.4 GB | General (Dense) |
-| 34 | **Phi-4-Instruct** | 14.7B | 14.7B | 8.5 GB | General (Dense) |
+| `qwen-3b` | Qwen1.5-MoE-A2.7B-Chat (Q4_K_M) | 14.3B | 2.7B | 8.84 | Chat MoE |
+| `qwen-14b` | Qwen3-30B-A3B-Instruct (Q4_K_M) | 30.5B | 3.3B | 17.28 | Chat MoE |
+| `qwen-57b` | Qwen2-57B-A14B-Instruct (Q4_K_M) | 57.0B | 14.0B | 32.46 | Chat MoE |
+| `deepseek-moe-16b` | DeepSeek-MoE-16B-Chat (Q4_K_M) | 16.4B | 2.8B | 9.20 | Chat MoE |
+| `deepseek-lite` | DeepSeek-Coder-V2-Lite-Instruct (Q4_K_M) | 16.4B | 2.4B | 10.40 | Coding MoE |
+| `dbrx` | DBRX-Instruct (IQ2_XXS) | 132.0B | 36.0B | 32.24 | Chat MoE |
+| `mixtral` | Mixtral-8x7B-Instruct-v0.1 (Q4_K_M) | 46.7B | 12.9B | 26.40 | Chat MoE |
+| `mixtral-8x22b` | Mixtral-8x22B-v0.1 (IQ2_XXS) | 141.0B | 39.0B | 35.28 | Large MoE |
+| `qwen-coder-30b` | Qwen3-Coder-30B-A3B-Instruct (Q4_K_M) | 30.5B | 3.3B | 17.28 | Coding MoE |
+| `phi-3.5-moe` | Phi-3.5-MoE-instruct (Q4_K_M) | 42.0B | 6.6B | 23.61 | Chat MoE |
+| `phi-4-moe` | Phi-4-MoE-2x14B-Instruct (Q4_K_M) | 40.0B | 5.6B | 23.06 | Chat MoE |
+| `olmoe-7b` | OLMoE-1B-7B-0924-Instruct (Q4_K_M) | 7.0B | 1.3B | 3.92 | Lightweight MoE |
+| `granite-3b-a800m` | Granite-3.0-3B-A800M-Instruct (Q4_K_M) | 3.3B | 0.8B | 1.92 | Lightweight MoE |
+| `deepseek-v2-lite` | DeepSeek-V2-Lite-Chat (Q4_K_M) | 16.4B | 2.4B | 9.65 | Chat MoE |
+| `jamba-mini-1.5` | AI21-Jamba-1.5-Mini (Q4_K_M) | 52.0B | 12.0B | 29.02 | Chat MoE |
+| `deepseek-v3.1` | DeepSeek-V3.1 (UD-TQ1_0) | 671.0B | 37.0B | 158.80 | Large MoE (Extreme) |
+| `glm-5.1` | GLM-5.1 (IQ2_XXS) | 754.0B | 40.0B | 200.00 | Large MoE (Agentic) |
+| `glm-5.2` | GLM-5.2-Colibri (UD-IQ2_XXS) | 744.0B | 40.0B | 238.00 | Large MoE (Agentic) |
+| `kimi-k2.6` | Kimi-K2.6 (UD-Q2_K_XL) | 1000.0B | 68.0B | 350.00 | Large MoE (Agentic) |
+| `kimi-k3` | Kimi-K3 (UD-Q2_K_XL) | 2800.0B | 120.0B | 980.00 | Large MoE (Extreme) |
+| `kimi-coder-72b` | Kimi-Dev-72B-Coder (IQ4_NL) | 72.5B | 72.5B | 38.48 | Coding (Dense) |
+| `kimi-coder-135m` | Kimi-Coder-135M (Q4_K_M) | 0.14B | 0.14B | 0.10 | Coding (Dense) |
+| `qwen-coder-7b` | Qwen2.5-Coder-7B-Instruct (Q4_K_M) | 7.6B | 7.6B | 4.70 | Coding (Dense) |
+| `qwen-coder-32b` | Qwen2.5-Coder-32B-Instruct (Q4_K_M) | 32.5B | 32.5B | 20.30 | Coding (Dense) |
+| `llama-3.1-8b` | Meta-Llama-3.1-8B-Instruct (Q4_K_M) | 8.0B | 8.0B | 4.90 | General (Dense) |
+| `llama-3.1-70b` | Meta-Llama-3.1-70B-Instruct (Q4_K_M) | 70.6B | 70.6B | 43.00 | General (Dense) |
+| `llama-3.2-1b` | Llama-3.2-1B-Instruct (Q4_K_M) | 1.2B | 1.2B | 1.20 | General (Dense) |
+| `llama-3.2-3b` | Llama-3.2-3B-Instruct (Q4_K_M) | 3.2B | 3.2B | 2.00 | General (Dense) |
+| `gemma-2-2b` | Gemma-2-2b-it (Q4_K_M) | 2.6B | 2.6B | 1.70 | General (Dense) |
+| `gemma-2-9b` | Gemma-2-9b-it (Q4_K_M) | 9.2B | 9.2B | 5.70 | General (Dense) |
+| `gemma-2-27b` | Gemma-2-27b-it (Q4_K_M) | 27.2B | 27.2B | 17.40 | General (Dense) |
+| `qwen-2.5-7b` | Qwen2.5-7B-Instruct (Q4_K_M) | 7.6B | 7.6B | 4.36 | General (Dense) |
+| `qwen-2.5-72b` | Qwen2.5-72B-Instruct (Q4_K_M) | 72.5B | 72.5B | 44.16 | General (Dense) |
+| `command-r-plus` | Command-R-Plus (IQ3_M) | 104.0B | 104.0B | 44.41 | General (Dense) |
+| `phi-3-mini` | Phi-3-mini-128k-instruct (Q4_K_M) | 3.8B | 3.8B | 2.23 | General (Dense) |
+| `phi-4` | Phi-4-Instruct (Q4_K_M) | 14.7B | 14.7B | 8.50 | General (Dense) |
+
+*Multi-shard models (e.g. GLM-5.1, Kimi-K3) are registered by their first shard file — `amcoli pull <alias>` fetches that single file.*
 
 ---
 
@@ -213,7 +223,7 @@ amcoli agent --api-url http://127.0.0.1:11434/v1 --model qwen2.5-coder:7b
 ### 2. Native Engine CLI
 Start the C++ interactive visual selector and live chat/cache execution:
 ```bash
-# Launch selector CLI
+# Launch selector CLI (pick a model → download → chat)
 amcoli run
 ```
 
@@ -224,6 +234,25 @@ amcoli run --model .models/Qwen1.5-MoE-A2.7B-Chat-Q4_K_M.gguf
 ```
 
 *Note: `run` performs real model token generation using the linked `llama.cpp` inference engine, while dynamically updating the active RAM/VRAM expert cache statistics.*
+
+### 3. Command Reference
+
+| Command | Purpose |
+| :--- | :--- |
+| `amcoli` | Interactive model selector → download → chat |
+| `amcoli run` | Chat loop (real llama.cpp token decoding + live cache stats) |
+| `amcoli pull <alias>` | Download a model from the registry (resumable; `--dry-run` previews it) |
+| `amcoli list` | Print the full 36-model registry table |
+| `amcoli check` | Verify all 36 registry URLs are reachable |
+| `amcoli info <alias>` | Show download URL + details for one model |
+| `amcoli recommend` | Print hardware-based model recommendation |
+| `amcoli bench` | Run the Zipf benchmark over the expert cache |
+| `amcoli version` / `--version` | Print the version string |
+| `amcoli serve` / `convert` | Placeholders (Phase 5, not yet implemented) |
+
+Inside the chat loop and selector, type `/help` to list slash commands (`/exit`, `/stats`, `/memory`, `/clear`, `/version`, `/recommend`, …).
+
+AMcoli automatically checks (once per day, in the background) whether a newer release exists and prints a notice when one is available.
 
 ---
 
